@@ -68,6 +68,8 @@ public enum InjectionPayload {
         node.removeAttribute('lang');
         delete node.dataset.localCodexRtlManaged;
         delete node.dataset.localCodexRtlProse;
+        delete node.dataset.localCodexRtlResponse;
+        delete node.dataset.localCodexRtlHint;
         delete node.dataset.localCodexRtlInput;
       });
       document.querySelectorAll('[data-local-codex-rtl-code="true"]').forEach((node) => {

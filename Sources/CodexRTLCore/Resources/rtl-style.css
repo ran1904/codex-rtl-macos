@@ -4,6 +4,12 @@
   unicode-bidi: plaintext !important;
 }
 
+[data-local-codex-rtl-root="true"] [data-local-codex-rtl-response="true"] {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: plaintext !important;
+}
+
 [data-local-codex-rtl-root="true"] [data-local-codex-rtl-code="true"],
 [data-local-codex-rtl-root="true"] [data-local-codex-rtl-code="true"] * {
   direction: ltr !important;

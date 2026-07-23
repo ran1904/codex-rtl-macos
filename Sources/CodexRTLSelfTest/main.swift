@@ -106,6 +106,42 @@ do {
     try require(bundledAssets.css.contains("unicode-bidi"), "Bundled CSS is incomplete.")
     try require(bundledAssets.direction.contains("classifyDirection"), "Bundled direction classifier is incomplete.")
     try require(bundledAssets.runtime.contains("MutationObserver"), "Bundled runtime is incomplete.")
+    try require(
+        bundledAssets.runtime.contains("const UI_TEXT = 'span, label, button, summary'"),
+        "Bundled runtime omits RTL support for UI text."
+    )
+    try require(
+        bundledAssets.runtime.contains("hasDirectText"),
+        "Bundled runtime omits the UI-wrapper safety guard."
+    )
+    try require(
+        bundledAssets.runtime.contains("isInlineRichText"),
+        "Bundled runtime omits the inline Markdown inheritance guard."
+    )
+    try require(
+        bundledAssets.runtime.contains(#"[data-markdown-copy="inline-code"]"#),
+        "Bundled runtime omits inline-code isolation."
+    )
+    try require(
+        bundledAssets.runtime.contains("const RESPONSE = '[data-response-annotation-target]'"),
+        "Bundled runtime omits streaming-response detection."
+    )
+    try require(
+        bundledAssets.runtime.contains("responseFor"),
+        "Bundled runtime omits ancestor rescanning for streaming responses."
+    )
+    try require(
+        bundledAssets.runtime.contains("promptDirectionFor"),
+        "Bundled runtime omits the user-prompt direction hint."
+    )
+    try require(
+        bundledAssets.runtime.contains("OUTPUT_DIRECTION_THRESHOLD"),
+        "Bundled runtime omits the output-direction handoff threshold."
+    )
+    try require(
+        bundledAssets.css.contains("local-codex-rtl-response"),
+        "Bundled CSS omits streaming-response direction rules."
+    )
 
     print("OK: Codex RTL Helper loopback, target selection, payload, cleanup, and bundled assets passed.")
 } catch {

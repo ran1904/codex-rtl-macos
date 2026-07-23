@@ -3,9 +3,15 @@
   const ROOT = '[data-local-codex-rtl-root="true"]';
   const OWN = '[data-local-codex-rtl-control="true"]';
   const MESSAGE = '[data-message-author-role], article, [data-testid*="message" i]';
-  const PROSE = 'p, li, blockquote, h1, h2, h3, h4, h5, h6, td, th';
+  const RESPONSE = '[data-response-annotation-target]';
+  const TURN = '[data-turn-key]';
+  const USER_MESSAGE = '[data-user-message-bubble="true"], [data-message-author-role="user"]';
+  const OUTPUT_DIRECTION_THRESHOLD = 12;
+  const RICH_TEXT = 'p, li, blockquote, h1, h2, h3, h4, h5, h6, td, th';
+  const UI_TEXT = 'span, label, button, summary';
+  const PROSE = `${RICH_TEXT}, ${UI_TEXT}`;
   const INPUT = 'textarea, input[type="text"], [contenteditable="true"], [role="textbox"]';
-  const CODE = 'pre, code, kbd, samp, var, [data-testid*="terminal" i], [data-testid*="code" i], [class*="terminal" i], [class*="monaco" i], [class*="codemirror" i], [class*="shiki" i]';
+  const CODE = 'pre, code, kbd, samp, var, [data-markdown-copy="inline-code"], [data-testid*="terminal" i], [data-testid*="code" i], [class*="terminal" i], [class*="monaco" i], [class*="codemirror" i], [class*="shiki" i]';
   const classify = window.__LOCAL_CODEX_RTL_CLASSIFY__;
   if (typeof classify !== 'function') throw new Error('Missing local direction classifier.');
 
@@ -25,14 +31,55 @@
   function messageFor(element) { return element.closest?.(MESSAGE) || null; }
   function overrideFor(element) { return messageFor(element)?.dataset.localCodexRtlOverride || 'auto'; }
   function textFor(element) { return element.value || element.innerText || element.textContent || ''; }
+  function hasDirectText(element) {
+    return Array.from(element.childNodes || []).some(
+      (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim()
+    );
+  }
+  function isInlineRichText(element) {
+    return Boolean(element.matches?.(UI_TEXT) && element.parentElement?.closest?.(RICH_TEXT));
+  }
+  function responseFor(element) { return element.closest?.(RESPONSE) || null; }
+  function responseTextFor(element) {
+    const text = textFor(element).trim();
+    const heading = element.querySelector?.(':scope > h4')?.innerText?.trim();
+    return heading && text.startsWith(heading) ? text.slice(heading.length).trim() : text;
+  }
+  function promptDirectionFor(element) {
+    const prompt = element.closest?.(TURN)?.querySelector?.(USER_MESSAGE);
+    return prompt ? classify(textFor(prompt)) : null;
+  }
+  function strongCharacterCount(text) {
+    return (String(text || '').match(/[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFFA-Za-z]/g) || []).length;
+  }
+
+  function markCodeElement(element) {
+    if (element.dataset.localCodexRtlManaged === 'true') {
+      delete element.dataset.localCodexRtlProse;
+      delete element.dataset.localCodexRtlManaged;
+      element.removeAttribute('lang');
+    }
+    element.dataset.localCodexRtlCode = 'true';
+    element.dir = 'ltr';
+  }
 
   function markCode(root) {
-    if (root.matches?.(CODE)) root.dataset.localCodexRtlCode = 'true';
-    root.querySelectorAll?.(CODE).forEach((node) => { node.dataset.localCodexRtlCode = 'true'; node.dir = 'ltr'; });
+    if (root.matches?.(CODE)) markCodeElement(root);
+    root.querySelectorAll?.(CODE).forEach(markCodeElement);
   }
 
   function applyProse(element) {
     if (isOwn(element) || isCode(element)) return;
+    if (isInlineRichText(element)) {
+      if (element.dataset.localCodexRtlManaged === 'true') {
+        delete element.dataset.localCodexRtlProse;
+        delete element.dataset.localCodexRtlManaged;
+        element.removeAttribute('dir');
+        element.removeAttribute('lang');
+      }
+      return;
+    }
+    if (element.matches?.(UI_TEXT) && !hasDirectText(element)) return;
     const text = textFor(element).trim();
     if (!text) return;
     const forced = overrideFor(element);
@@ -44,6 +91,30 @@
     } else {
       delete element.dataset.localCodexRtlProse;
       if (element.dataset.localCodexRtlManaged === 'true') element.dir = 'auto';
+    }
+    element.dataset.localCodexRtlManaged = 'true';
+  }
+
+  function applyResponse(element) {
+    if (isOwn(element) || isCode(element)) return;
+    const output = responseTextFor(element);
+    const promptDirection = promptDirectionFor(element);
+    const usePromptHint = promptDirection === 'rtl'
+      && strongCharacterCount(output) < OUTPUT_DIRECTION_THRESHOLD;
+    if (!output && !usePromptHint) return;
+    const mode = usePromptHint ? 'rtl' : classify(output);
+    if (mode === 'rtl') {
+      element.dataset.localCodexRtlResponse = 'true';
+      element.dataset.localCodexRtlHint = usePromptHint ? 'prompt' : 'output';
+      element.dir = 'rtl';
+      element.lang = 'he';
+    } else {
+      delete element.dataset.localCodexRtlResponse;
+      element.dataset.localCodexRtlHint = 'output';
+      if (element.dataset.localCodexRtlManaged === 'true') {
+        element.dir = 'auto';
+        element.removeAttribute('lang');
+      }
     }
     element.dataset.localCodexRtlManaged = 'true';
   }
@@ -88,6 +159,12 @@
   function scan(root = document.body) {
     if (!(root instanceof HTMLElement)) return;
     markCode(root);
+    const responses = [];
+    const containingResponse = responseFor(root);
+    if (containingResponse) responses.push(containingResponse);
+    if (root.matches?.(RESPONSE)) responses.push(root);
+    root.querySelectorAll?.(RESPONSE).forEach((node) => responses.push(node));
+    for (const response of new Set(responses)) applyResponse(response);
     const messages = [];
     if (root.matches?.(MESSAGE)) messages.push(root);
     root.querySelectorAll?.(MESSAGE).forEach((node) => messages.push(node));
