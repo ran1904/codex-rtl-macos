@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test on macOS
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Run Swift tests
+        run: sh ./scripts/test.sh
+
+      - name: Run JavaScript tests
+        run: |
+          node self-test.mjs
+          node integration-test.mjs
+          node inject.mjs --dry-run
+
+      - name: Check scripts
+        run: |
+          node --check inject.mjs
+          node --check src/direction.js
+          node --check src/rtl-runtime.js
+          sh -n run.sh
+          sh -n start.sh
+          sh -n stop.sh
+          sh -n uninstall.sh
+          sh -n scripts/build-app.sh
+          sh -n scripts/install-app.sh
+          sh -n scripts/sync-resources.sh
+          sh -n scripts/test.sh
+
+      - name: Build app
+        run: sh ./scripts/build-app.sh

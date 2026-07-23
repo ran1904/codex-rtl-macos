@@ -1,0 +1,44 @@
+[data-local-codex-rtl-root="true"] [data-local-codex-rtl-prose="true"] {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: plaintext !important;
+}
+
+[data-local-codex-rtl-root="true"] [data-local-codex-rtl-code="true"],
+[data-local-codex-rtl-root="true"] [data-local-codex-rtl-code="true"] * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+}
+
+[data-local-codex-rtl-root="true"] [data-local-codex-rtl-input="true"] {
+  direction: rtl !important;
+  text-align: right !important;
+  unicode-bidi: plaintext !important;
+}
+
+[data-local-codex-rtl-control="true"] {
+  display: inline-flex;
+  direction: rtl;
+  gap: 4px;
+  margin-block: 8px 0;
+  padding: 4px;
+  border: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+  border-radius: 8px;
+  opacity: .78;
+}
+
+[data-local-codex-rtl-control="true"] button {
+  border: 0;
+  border-radius: 5px;
+  padding: 3px 7px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-size: .76em;
+  cursor: pointer;
+}
+
+[data-local-codex-rtl-control="true"] button[aria-pressed="true"] {
+  background: color-mix(in srgb, currentColor 16%, transparent);
+}

@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a Codex RTL Helper problem without sharing private conversation content
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Do not include conversation content, cookies, tokens, or personal information.
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "For example: macOS 15.5"
+    validations:
+      required: true
+  - type: input
+    id: chatgpt-version
+    attributes:
+      label: ChatGPT version
+      description: You can find this in the About ChatGPT window.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      description: Describe the behavior without pasting private conversation content.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: I confirmed that this report contains no conversation content, secrets, or personal information.
+          required: true
